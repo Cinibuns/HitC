@@ -8,10 +8,29 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @EnvironmentObject var appState: AppState
+    @State private var isSigningOut = false
+
     var body: some View {
         NavigationView {
-            Text("Settings")
-                .navigationTitle("Settings")
+            List {
+                Section {
+                    Button(role: .destructive) {
+                        Task {
+                            isSigningOut = true
+                            await appState.signOut()
+                            isSigningOut = false
+                        }
+                    } label: {
+                        if isSigningOut {
+                            HStack { Spacer(); ProgressView(); Spacer() }
+                        } else {
+                            Text("Sign out")
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Settings")
         }
     }
 }

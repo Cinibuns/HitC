@@ -46,7 +46,7 @@ struct AuthView: View {
                 Button {
                     Task { await signUp() }
                 } label: {
-                    Text("Create account")
+                    Text("Sign up")
                 }
                 .buttonStyle(.bordered)
                 .disabled(isLoading)
@@ -65,9 +65,10 @@ struct AuthView: View {
 
         do {
             _ = try await SupabaseManager.client.auth.signIn(email: email, password: password)
-            appState.setSignedIn(true)
+            await appState.refreshSession() // IMPORTANT: fetch session + profile
         } catch {
-            errorText = "Sign in failed."
+            errorText = error.localizedDescription
+            print("SIGN IN ERROR:", error)
         }
     }
 
@@ -78,12 +79,16 @@ struct AuthView: View {
 
         do {
             _ = try await SupabaseManager.client.auth.signUp(email: email, password: password)
+
+            // If email confirmations are enabled, you may NOT get a session immediately.
             await appState.refreshSession()
+
             if !appState.isSignedIn {
                 errorText = "Check your email to verify, then sign in."
             }
         } catch {
-            errorText = "Sign up failed."
+            errorText = error.localizedDescription
+            print("SIGN UP ERROR:", error)
         }
     }
 }

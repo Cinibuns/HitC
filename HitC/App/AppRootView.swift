@@ -12,29 +12,34 @@ struct AppRootView: View {
 
     var body: some View {
         Group {
-            if appState.isSignedIn {
-                MainTabView()
-            } else {
+            if !appState.isSignedIn {
                 AuthView()
+            } else if appState.profile == nil {
+                VStack(spacing: 12) {
+                    ProgressView("Loading profile…")
+                    if let lastError = appState.lastError {
+                        Text(lastError).foregroundStyle(.red).multilineTextAlignment(.center)
+                        Button("Retry") { Task { await appState.refreshSession() } }
+                        Button("Sign out") { Task { await appState.signOut() } }
+                    }
+                }
+                .padding()
+            } else if appState.profile?.is18Plus != true {
+                AgeGateView()
+            } else {
+                MainTabView()
             }
         }
-        .task {
-            await appState.refreshSession()
-        }
+        .task { await appState.refreshSession() }
     }
 }
 
 private struct MainTabView: View {
     var body: some View {
         TabView {
-            HomeView()
-                .tabItem { Label("Home", systemImage: "house") }
-
-            ProfileView()
-                .tabItem { Label("Profile", systemImage: "person.circle") }
-
-            SettingsView()
-                .tabItem { Label("Settings", systemImage: "gear") }
+            HomeView().tabItem { Label("Home", systemImage: "house") }
+            ProfileView().tabItem { Label("Profile", systemImage: "person.circle") }
+            SettingsView().tabItem { Label("Settings", systemImage: "gear") }
         }
     }
 }
