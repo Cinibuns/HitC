@@ -9,25 +9,30 @@ import Foundation
 
 struct Profile: Codable, Identifiable {
     let id: UUID
-    var username: String?
-    var displayName: String?
-    var avatarUrl: String?
-    var bannerUrl: String?
-    var bio: String?
-
     var is18Plus: Bool
     var nsfwEnabled: Bool
     var blurNsfw: Bool
 
     enum CodingKeys: String, CodingKey {
         case id
-        case username
-        case displayName = "display_name"
-        case avatarUrl = "avatar_url"
-        case bannerUrl = "banner_url"
-        case bio
         case is18Plus = "is_18_plus"
         case nsfwEnabled = "nsfw_enabled"
         case blurNsfw = "blur_nsfw"
+    }
+}
+
+struct Post: Codable, Identifiable {
+    let id: UUID
+    let authorId: UUID
+    let communityId: UUID?
+    let isNsfw: Bool
+    let createdAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case authorId = "author_id"
+        case communityId = "community_id"
+        case isNsfw = "is_nsfw"
+        case createdAt = "created_at"
     }
 }
