@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E45B50122F29C3D600A709C0 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = E45B50112F29C3D600A709C0 /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		E45B4FE82F29BA7700A709C0 /* HitC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = HitC.app; path = "/Users/mattsymons/Documents/head-in-the-clouds-main/HitC/build/Debug-iphoneos/HitC.app"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E45B50122F29C3D600A709C0 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,7 +38,15 @@
 			isa = PBXGroup;
 			children = (
 				E45B4FD32F29B3EB00A709C0 /* HitC */,
+				E45B50102F29C3D600A709C0 /* Frameworks */,
 			);
+			sourceTree = "<group>";
+		};
+		E45B50102F29C3D600A709C0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -56,6 +69,7 @@
 			);
 			name = HitC;
 			packageProductDependencies = (
+				E45B50112F29C3D600A709C0 /* Supabase */,
 			);
 			productName = HitC;
 			productReference = E45B4FE82F29BA7700A709C0 /* HitC.app */;
@@ -337,6 +351,14 @@
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E45B50112F29C3D600A709C0 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CA9A44F22F29B9CC00341ED7 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E45B4FC92F29B3EB00A709C0 /* Project object */;
 }
