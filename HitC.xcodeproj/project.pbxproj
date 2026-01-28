@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		E45B4FD12F29B3EB00A709C0 /* HitC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = HitC.app; path = "/Users/mattsymons/Documents/head-in-the-clouds-main/HitC/build/Debug-iphoneos/HitC.app"; sourceTree = "<absolute>"; };
+		CA9A44EB2F29B95000341ED7 /* HitC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = HitC.app; path = "/Users/Brandon/Documents/HitC/build/Debug-iphoneos/HitC.app"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -58,7 +58,7 @@
 			packageProductDependencies = (
 			);
 			productName = HitC;
-			productReference = E45B4FD12F29B3EB00A709C0 /* HitC.app */;
+			productReference = CA9A44EB2F29B95000341ED7 /* HitC.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
