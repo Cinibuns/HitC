@@ -6,13 +6,8 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		CA9A44EA2F29B88300341ED7 /* test.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA9A44E92F29B88200341ED7 /* test.swift */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
-		CA9A44E92F29B88200341ED7 /* test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test.swift; sourceTree = "<group>"; };
-		E45B4FD12F29B3EB00A709C0 /* HitC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HitC.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E45B4FD12F29B3EB00A709C0 /* HitC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = HitC.app; path = "/Users/mattsymons/Documents/head-in-the-clouds-main/HitC/build/Debug-iphoneos/HitC.app"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -38,17 +33,7 @@
 			isa = PBXGroup;
 			children = (
 				E45B4FD32F29B3EB00A709C0 /* HitC */,
-				E45B4FD22F29B3EB00A709C0 /* Products */,
-				CA9A44E92F29B88200341ED7 /* test.swift */,
 			);
-			sourceTree = "<group>";
-		};
-		E45B4FD22F29B3EB00A709C0 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				E45B4FD12F29B3EB00A709C0 /* HitC.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -101,7 +86,7 @@
 			mainGroup = E45B4FC82F29B3EB00A709C0;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = E45B4FD22F29B3EB00A709C0 /* Products */;
+			productRefGroup = E45B4FC82F29B3EB00A709C0;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -125,7 +110,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CA9A44EA2F29B88300341ED7 /* test.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
