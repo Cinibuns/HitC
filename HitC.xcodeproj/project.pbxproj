@@ -6,7 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CA9A44EA2F29B88300341ED7 /* test.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA9A44E92F29B88200341ED7 /* test.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		CA9A44E92F29B88200341ED7 /* test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test.swift; sourceTree = "<group>"; };
 		E45B4FD12F29B3EB00A709C0 /* HitC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HitC.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -34,6 +39,7 @@
 			children = (
 				E45B4FD32F29B3EB00A709C0 /* HitC */,
 				E45B4FD22F29B3EB00A709C0 /* Products */,
+				CA9A44E92F29B88200341ED7 /* test.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -119,6 +125,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CA9A44EA2F29B88300341ED7 /* test.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
