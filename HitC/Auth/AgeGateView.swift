@@ -14,29 +14,56 @@ struct AgeGateView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 16) {
-                Text("18+ Required")
-                    .font(.title2).bold()
+            ZStack {
+                CloudBackground()
 
-                Text("To protect safety and comply with platform rules, you must confirm you are 18+ to access the feed.")
-                    .multilineTextAlignment(.center)
+                VStack(spacing: 16) {
+                    VStack(spacing: 6) {
+                        Text("18+ Required")
+                            .font(.title2.weight(.bold))
+                            .foregroundStyle(.white)
 
-                if let errorText {
-                    Text(errorText).foregroundStyle(.red)
+                        Text("Confirm you’re 18+ to access the feed and settings.")
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+
+                    VStack(spacing: 12) {
+                        if let errorText {
+                            Text(errorText)
+                                .foregroundStyle(.red)
+                                .font(.caption)
+                                .multilineTextAlignment(.center)
+                        }
+
+                        Button {
+                            Task { await confirm18Plus() }
+                        } label: {
+                            if isLoading { ProgressView().tint(.white) }
+                            else { Text("I’m 18+ (Continue)") }
+                        }
+                        .buttonStyle(GradientPrimaryButtonStyle())
+                        .disabled(isLoading)
+
+                        Button(role: .destructive) {
+                            Task { await appState.signOut() }
+                        } label: {
+                            Text("Sign out")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(SoftButtonStyle())
+                    }
+                    .padding(16)
+                    .background(Theme.card())
+                    .padding(.horizontal)
+
+                    Spacer()
                 }
-
-                Button {
-                    Task { await confirm18Plus() }
-                } label: {
-                    if isLoading { ProgressView() } else { Text("I’m 18+ (Continue)") }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(isLoading)
-
-                Spacer()
+                .padding(.top, 24)
             }
-            .padding()
-            .navigationTitle("Age Gate")
+            .navigationTitle("")
+            .navigationBarHidden(true)
         }
     }
 
@@ -47,9 +74,9 @@ struct AgeGateView: View {
 
         do {
             try await ProfileService.setIs18PlusTrue()
-            await appState.refreshSession() // re-fetch profile
+            await appState.refreshSession()
         } catch {
-            errorText = "Couldn’t update your account. Try again."
+            errorText = error.localizedDescription
         }
     }
 }

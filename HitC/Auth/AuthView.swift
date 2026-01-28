@@ -18,43 +18,69 @@ struct AuthView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 16) {
-                Text("Head in the Clouds")
-                    .font(.title2).bold()
+            ZStack {
+                CloudBackground()
 
-                TextField("Email", text: $email)
-                    .textInputAutocapitalization(.never)
-                    .keyboardType(.emailAddress)
-                    .autocorrectionDisabled()
-                    .textFieldStyle(.roundedBorder)
+                VStack(spacing: 16) {
+                    VStack(spacing: 6) {
+                        Text("Head in the Clouds")
+                            .font(.title2.weight(.bold))
+                            .foregroundStyle(.white)
 
-                SecureField("Password", text: $password)
-                    .textFieldStyle(.roundedBorder)
+                        Text("Sign in to continue")
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.textSecondary)
+                    }
 
-                if let errorText {
-                    Text(errorText).foregroundStyle(.red)
+                    VStack(alignment: .leading, spacing: 12) {
+                        TextField("Email", text: $email)
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.emailAddress)
+                            .autocorrectionDisabled()
+                            .textFieldStyle(.roundedBorder)
+
+                        SecureField("Password", text: $password)
+                            .textFieldStyle(.roundedBorder)
+
+                        if let errorText {
+                            Text(errorText)
+                                .foregroundStyle(.red)
+                                .font(.caption)
+                        }
+
+                        Button {
+                            Task { await signIn() }
+                        } label: {
+                            if isLoading { ProgressView().tint(.white) }
+                            else { Text("Sign in") }
+                        }
+                        .buttonStyle(GradientPrimaryButtonStyle())
+                        .disabled(isLoading)
+
+                        Button {
+                            Task { await signUp() }
+                        } label: {
+                            Text("Sign up")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(SoftButtonStyle())
+                        .disabled(isLoading)
+
+                        Text("No explicit content is shown by default.")
+                            .font(.caption2)
+                            .foregroundStyle(Theme.textSecondary)
+                            .padding(.top, 2)
+                    }
+                    .padding(16)
+                    .background(Theme.card())
+                    .padding(.horizontal)
+
+                    Spacer()
                 }
-
-                Button {
-                    Task { await signIn() }
-                } label: {
-                    if isLoading { ProgressView() } else { Text("Sign in") }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(isLoading)
-
-                Button {
-                    Task { await signUp() }
-                } label: {
-                    Text("Sign up")
-                }
-                .buttonStyle(.bordered)
-                .disabled(isLoading)
-
-                Spacer()
+                .padding(.top, 24)
             }
-            .padding()
-            .navigationTitle("Login")
+            .navigationTitle("")
+            .navigationBarHidden(true)
         }
     }
 
@@ -65,7 +91,7 @@ struct AuthView: View {
 
         do {
             _ = try await SupabaseManager.client.auth.signIn(email: email, password: password)
-            await appState.refreshSession() // IMPORTANT: fetch session + profile
+            await appState.refreshSession()
         } catch {
             errorText = error.localizedDescription
             print("SIGN IN ERROR:", error)
@@ -79,8 +105,6 @@ struct AuthView: View {
 
         do {
             _ = try await SupabaseManager.client.auth.signUp(email: email, password: password)
-
-            // If email confirmations are enabled, you may NOT get a session immediately.
             await appState.refreshSession()
 
             if !appState.isSignedIn {

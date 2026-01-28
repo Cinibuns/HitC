@@ -12,16 +12,53 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationView {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Signed in: \(appState.isSignedIn ? "Yes" : "No")")
-                Text("User ID: \(appState.profile?.id.uuidString ?? "-")")
-                Text("18+: \(appState.profile?.is18Plus == true ? "Yes" : "No")")
-                Text("NSFW enabled: \(appState.profile?.nsfwEnabled == true ? "Yes" : "No")")
-                Text("Blur NSFW: \(appState.profile?.blurNsfw == true ? "Yes" : "No")")
-                Spacer()
+            ZStack {
+                CloudBackground()
+
+                VStack(spacing: 14) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Your Profile")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+
+                        if let p = appState.profile {
+                            InfoRow(label: "User ID", value: p.id.uuidString.prefix(8) + "…")
+                            InfoRow(label: "18+", value: p.is18Plus ? "Yes" : "No")
+                            InfoRow(label: "NSFW enabled", value: p.nsfwEnabled ? "Yes" : "No")
+                            InfoRow(label: "Blur NSFW", value: p.blurNsfw ? "Yes" : "No")
+                        } else {
+                            Text("Loading…")
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                    .padding(16)
+                    .background(Theme.card())
+                    .padding(.horizontal)
+
+                    Spacer()
+                }
+                .padding(.top, 10)
             }
-            .padding()
             .navigationTitle("Profile")
+            .toolbarBackground(.hidden, for: .navigationBar)
         }
+    }
+}
+
+private struct InfoRow: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.9))
+            Spacer()
+            Text(value)
+                .font(.caption)
+                .foregroundStyle(Theme.textSecondary)
+        }
+        .padding(.vertical, 6)
     }
 }

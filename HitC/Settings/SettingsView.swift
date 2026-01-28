@@ -18,52 +18,69 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationView {
-            List {
-                if let profile = appState.profile {
-                    Section("Content") {
-                        Toggle("Enable adult content (NSFW)", isOn: $nsfwEnabled)
-                            .disabled(profile.is18Plus != true)
+            ZStack {
+                CloudBackground()
 
-                        Toggle("Blur NSFW previews", isOn: $blurNsfw)
-                            .disabled(profile.is18Plus != true || nsfwEnabled == false)
+                ScrollView {
+                    VStack(spacing: 14) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Content")
+                                .font(.headline)
+                                .foregroundStyle(.white)
 
-                        if profile.is18Plus != true {
-                            Text("Confirm 18+ to enable these settings.")
-                                .font(.footnote)
-                        }
-                    }
+                            Toggle("Enable adult content (NSFW)", isOn: $nsfwEnabled)
+                                .tint(Color.pink.opacity(0.8))
+                                .disabled(appState.profile?.is18Plus != true)
 
-                    if let errorText {
-                        Section {
-                            Text(errorText).foregroundStyle(.red)
-                        }
-                    }
+                            Toggle("Blur NSFW previews", isOn: $blurNsfw)
+                                .tint(Color.orange.opacity(0.85))
+                                .disabled(appState.profile?.is18Plus != true || nsfwEnabled == false)
 
-                    Section {
-                        Button {
-                            Task { await save() }
-                        } label: {
-                            if isSaving {
-                                HStack { Spacer(); ProgressView(); Spacer() }
-                            } else {
-                                Text("Save")
+                            if appState.profile?.is18Plus != true {
+                                Text("Confirm 18+ to enable these settings.")
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.textSecondary)
                             }
                         }
-                        .disabled(isSaving || profile.is18Plus != true)
+                        .padding(16)
+                        .background(Theme.card())
 
-                        Button(role: .destructive) {
-                            Task { await appState.signOut() }
-                        } label: {
-                            Text("Sign out")
+                        if let errorText {
+                            Text(errorText)
+                                .foregroundStyle(.red)
+                                .font(.caption)
+                                .padding(.horizontal)
                         }
+
+                        VStack(spacing: 10) {
+                            Button {
+                                Task { await save() }
+                            } label: {
+                                if isSaving { ProgressView().tint(.white) }
+                                else { Text("Save") }
+                            }
+                            .buttonStyle(GradientPrimaryButtonStyle())
+                            .disabled(isSaving || appState.profile?.is18Plus != true)
+
+                            Button(role: .destructive) {
+                                Task { await appState.signOut() }
+                            } label: {
+                                Text("Sign out")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(SoftButtonStyle())
+                        }
+                        .padding(16)
+                        .background(Theme.card())
+
+                        Spacer(minLength: 20)
                     }
-                } else {
-                    Section {
-                        ProgressView("Loading…")
-                    }
+                    .padding(.horizontal)
+                    .padding(.top, 10)
                 }
             }
             .navigationTitle("Settings")
+            .toolbarBackground(.hidden, for: .navigationBar)
             .onAppear {
                 nsfwEnabled = appState.profile?.nsfwEnabled ?? false
                 blurNsfw = appState.profile?.blurNsfw ?? true
@@ -80,7 +97,7 @@ struct SettingsView: View {
 
         do {
             try await ProfileService.updateSettings(nsfwEnabled: nsfwEnabled, blurNsfw: blurNsfw)
-            await appState.refreshSession() // re-fetch profile
+            await appState.refreshSession()
         } catch {
             errorText = error.localizedDescription
         }
