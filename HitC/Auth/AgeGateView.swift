@@ -15,19 +15,20 @@ struct AgeGateView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                CloudBackground()
+                LightCloudBackground()
 
                 VStack(spacing: 16) {
-                    VStack(spacing: 6) {
+                    VStack(spacing: 8) {
                         Text("18+ Required")
                             .font(.title2.weight(.bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.textPrimary)
 
                         Text("Confirm you’re 18+ to access the feed and settings.")
                             .font(.subheadline)
                             .foregroundStyle(Theme.textSecondary)
                             .multilineTextAlignment(.center)
                     }
+                    .padding(.top, 24)
 
                     VStack(spacing: 12) {
                         if let errorText {
@@ -40,27 +41,29 @@ struct AgeGateView: View {
                         Button {
                             Task { await confirm18Plus() }
                         } label: {
-                            if isLoading { ProgressView().tint(.white) }
-                            else { Text("I’m 18+ (Continue)") }
+                            if isLoading {
+                                ProgressView().tint(.white)
+                            } else {
+                                Text("I’m 18+ (Continue)")
+                            }
                         }
-                        .buttonStyle(GradientPrimaryButtonStyle())
+                        .buttonStyle(NeonRingPrimaryButtonStyle())
                         .disabled(isLoading)
 
                         Button(role: .destructive) {
                             Task { await appState.signOut() }
                         } label: {
                             Text("Sign out")
-                                .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(SoftButtonStyle())
+                        .buttonStyle(SoftSecondaryButtonStyle())
+                        .disabled(isLoading)
                     }
-                    .padding(16)
-                    .background(Theme.card())
+                    .padding(18)
+                    .background(Theme.lightCard())
                     .padding(.horizontal)
 
                     Spacer()
                 }
-                .padding(.top, 24)
             }
             .navigationTitle("")
             .navigationBarHidden(true)

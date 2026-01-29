@@ -12,7 +12,7 @@ enum PostService {
     static func fetchFeed(limit: Int = 25) async throws -> [Post] {
         try await SupabaseManager.client
             .from("posts")
-            .select("id,author_id,community_id,is_nsfw,comment_count,created_at")
+            .select("id,author_id,community_id,is_nsfw,comment_count,created_at,image_url")
             .order("created_at", ascending: false)
             .limit(limit)
             .execute()
@@ -22,7 +22,7 @@ enum PostService {
     static func fetchPost(id: UUID) async throws -> Post {
         let rows: [Post] = try await SupabaseManager.client
             .from("posts")
-            .select("id,author_id,community_id,is_nsfw,comment_count,created_at")
+            .select("id,author_id,community_id,is_nsfw,comment_count,created_at,image_url")
             .eq("id", value: id.uuidString)
             .limit(1)
             .execute()

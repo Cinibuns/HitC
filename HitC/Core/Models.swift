@@ -48,6 +48,7 @@ struct Post: Codable, Identifiable {
     let isNsfw: Bool
     let commentCount: Int
     let createdAt: Date?
+    let imageUrl: String?          // ✅ add
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -56,8 +57,10 @@ struct Post: Codable, Identifiable {
         case isNsfw = "is_nsfw"
         case commentCount = "comment_count"
         case createdAt = "created_at"
+        case imageUrl = "image_url" // ✅ add
     }
 }
+
 
 // MARK: - Comment
 

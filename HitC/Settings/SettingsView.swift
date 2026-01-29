@@ -19,17 +19,18 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                CloudBackground()
+                LightCloudBackground()
 
                 ScrollView {
                     VStack(spacing: 14) {
+
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Content")
                                 .font(.headline)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Theme.textPrimary)
 
                             Toggle("Enable adult content (NSFW)", isOn: $nsfwEnabled)
-                                .tint(Color.pink.opacity(0.8))
+                                .tint(Color(red: 0.84, green: 0.10, blue: 0.62))
                                 .disabled(appState.profile?.is18Plus != true)
 
                             Toggle("Blur NSFW previews", isOn: $blurNsfw)
@@ -42,8 +43,9 @@ struct SettingsView: View {
                                     .foregroundStyle(Theme.textSecondary)
                             }
                         }
-                        .padding(16)
-                        .background(Theme.card())
+                        .padding(18)
+                        .background(Theme.lightCard())
+                        .padding(.horizontal)
 
                         if let errorText {
                             Text(errorText)
@@ -56,31 +58,29 @@ struct SettingsView: View {
                             Button {
                                 Task { await save() }
                             } label: {
-                                if isSaving { ProgressView().tint(.white) }
-                                else { Text("Save") }
+                                if isSaving { ProgressView().tint(.white) } else { Text("Save") }
                             }
-                            .buttonStyle(GradientPrimaryButtonStyle())
+                            .buttonStyle(NeonRingPrimaryButtonStyle())
                             .disabled(isSaving || appState.profile?.is18Plus != true)
 
                             Button(role: .destructive) {
                                 Task { await appState.signOut() }
                             } label: {
                                 Text("Sign out")
-                                    .frame(maxWidth: .infinity)
                             }
-                            .buttonStyle(SoftButtonStyle())
+                            .buttonStyle(SoftSecondaryButtonStyle())
                         }
-                        .padding(16)
-                        .background(Theme.card())
+                        .padding(18)
+                        .background(Theme.lightCard())
+                        .padding(.horizontal)
 
-                        Spacer(minLength: 20)
+                        Spacer(minLength: 24)
                     }
-                    .padding(.horizontal)
                     .padding(.top, 10)
                 }
             }
-            .navigationTitle("Settings")
-            .toolbarBackground(.hidden, for: .navigationBar)
+            .navigationTitle("")
+            .navigationBarHidden(true)
             .onAppear {
                 nsfwEnabled = appState.profile?.nsfwEnabled ?? false
                 blurNsfw = appState.profile?.blurNsfw ?? true

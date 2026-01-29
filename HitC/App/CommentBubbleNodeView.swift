@@ -17,11 +17,11 @@ struct CommentBubbleNodeView: View {
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(comment.body ?? "")
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
 
                 HStack(spacing: 10) {
                     Button("Reply") { onReplyTapped(comment.id) }
-                        .buttonStyle(SoftButtonStyle())
+                        .buttonStyle(SoftSecondaryButtonStyle())
 
                     Spacer()
 

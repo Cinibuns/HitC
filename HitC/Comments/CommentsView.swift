@@ -19,94 +19,87 @@ struct CommentsView: View {
     @State private var isLoading = false
     @State private var errorText: String?
 
+    // Reply composer
     @State private var replyingTo: UUID? = nil
     @State private var replyText = ""
     @State private var isPostingReply = false
 
     var body: some View {
-        ZStack {
-            CloudBackground()
+        NavigationView {
+            ZStack {
+                LightCloudBackground()
 
-            Group {
-                if isLoading {
-                    ProgressView("Loading…").tint(.white)
-                } else if let errorText {
-                    VStack(spacing: 12) {
-                        Text("Couldn’t load comments.")
-                            .foregroundStyle(.white)
-                            .font(.headline)
-                        Text(errorText).foregroundStyle(.red).multilineTextAlignment(.center)
-                        Button("Retry") { Task { await load() } }
-                            .buttonStyle(GradientPrimaryButtonStyle())
-                            .padding(.horizontal)
-                    }
-                    .padding()
-                } else {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 14) {
+                Group {
+                    if isLoading {
+                        ProgressView("Loading…")
 
-                            // Post at top
-                            if let post {
-                                VStack(alignment: .leading, spacing: 10) {
-                                    Text(postAuthor?.displayName ?? postAuthor?.username ?? "Unknown user")
-                                        .font(.headline)
-                                        .foregroundStyle(.white)
+                    } else if let errorText {
+                        VStack(spacing: 12) {
+                            Text("Couldn’t load comments.")
+                                .font(.headline)
+                                .foregroundStyle(Theme.textPrimary)
 
-                                    Text(post.isNsfw ? "NSFW" : "SAFE")
-                                        .font(.caption.weight(.semibold))
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 6)
-                                        .background(
-                                            Capsule().fill((post.isNsfw ? Color.pink : Color.green).opacity(0.22))
-                                        )
-                                        .overlay(Capsule().stroke(Color.white.opacity(0.16), lineWidth: 1))
-                                        .foregroundStyle(.white.opacity(0.9))
+                            Text(errorText)
+                                .foregroundStyle(.red)
+                                .multilineTextAlignment(.center)
 
-                                    Text("💬 \(post.commentCount) comments")
-                                        .font(.caption)
-                                        .foregroundStyle(Theme.textSecondary)
-                                }
-                                .padding(14)
-                                .background(Theme.card())
+                            Button("Retry") { Task { await load() } }
+                                .buttonStyle(NeonRingPrimaryButtonStyle())
                                 .padding(.horizontal)
-                            }
+                        }
+                        .padding()
 
-                            // Reply composer
-                            if let parentId = replyingTo {
-                                VStack(alignment: .leading, spacing: 10) {
-                                    Text("Replying…").font(.caption.weight(.semibold)).foregroundStyle(Theme.textSecondary)
+                    } else {
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 14) {
 
-                                    TextField("Write a reply…", text: $replyText, axis: .vertical)
-                                        .textFieldStyle(.roundedBorder)
-                                        .lineLimit(1...4)
+                                // Post at top
+                                if let post {
+                                    PostHeaderView(post: post, author: postAuthor)
+                                        .padding(.horizontal)
+                                }
 
-                                    HStack(spacing: 10) {
-                                        Button("Cancel") {
-                                            replyingTo = nil
-                                            replyText = ""
+                                // Reply composer (shows only when replying)
+                                if let parentId = replyingTo {
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        Text("Replying…")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(Theme.textSecondary)
+
+                                        TextField("Write a reply…", text: $replyText, axis: .vertical)
+                                            .textFieldStyle(.roundedBorder)
+                                            .lineLimit(1...4)
+
+                                        HStack(spacing: 10) {
+                                            Button("Cancel") {
+                                                replyingTo = nil
+                                                replyText = ""
+                                            }
+                                            .buttonStyle(SoftSecondaryButtonStyle())
+
+                                            Spacer()
+
+                                            Button {
+                                                Task { await postReply(parentId: parentId) }
+                                            } label: {
+                                                if isPostingReply {
+                                                    ProgressView().tint(.white)
+                                                } else {
+                                                    Text("Reply")
+                                                }
+                                            }
+                                            .buttonStyle(NeonRingPrimaryButtonStyle())
+                                            .frame(maxWidth: 170)
+                                            .disabled(isPostingReply || replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                                         }
-                                        .buttonStyle(SoftButtonStyle())
-
-                                        Spacer()
-
-                                        Button {
-                                            Task { await postReply(parentId: parentId) }
-                                        } label: {
-                                            if isPostingReply { ProgressView().tint(.white) } else { Text("Reply") }
-                                        }
-                                        .buttonStyle(GradientPrimaryButtonStyle())
-                                        .frame(maxWidth: 170)
-                                        .disabled(isPostingReply || replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                                     }
+                                    .padding(18)
+                                    .background(Theme.lightCard())
+                                    .padding(.horizontal)
                                 }
-                                .padding(14)
-                                .background(Theme.card())
-                                .padding(.horizontal)
-                            }
 
-                            // Thread
-                            VStack(alignment: .leading, spacing: 12) {
-                                ForEach(topLevel) { c in
+                                // Thread
+                                VStack(alignment: .leading, spacing: 12) {
                                     ForEach(topLevel) { c in
                                         CommentBubbleNodeView(
                                             comment: c,
@@ -118,20 +111,19 @@ struct CommentsView: View {
                                             }
                                         )
                                     }
-
                                 }
+                                .padding(.horizontal)
+                                .padding(.bottom, 24)
                             }
-                            .padding(.horizontal)
-                            .padding(.bottom, 24)
+                            .padding(.top, 10)
                         }
-                        .padding(.top, 10)
                     }
                 }
             }
+            .navigationTitle("")
+            .navigationBarHidden(true)
+            .task { await load() }
         }
-        .navigationTitle("Comments")
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .task { await load() }
     }
 
     private func load() async {
@@ -140,12 +132,14 @@ struct CommentsView: View {
         errorText = nil
 
         do {
+            // Post header
             let fetchedPost = try await PostService.fetchPost(id: postId)
             post = fetchedPost
 
             let postAuthors = try await PublicProfileService.fetchProfiles(ids: [fetchedPost.authorId])
             postAuthor = postAuthors.first
 
+            // All comments -> build tree
             let rows = try await CommentService.fetchAllComments(postId: postId, limit: 2000)
 
             var byParent: [UUID: [Comment]] = [:]

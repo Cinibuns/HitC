@@ -13,13 +13,13 @@ struct ProfileView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                CloudBackground()
+                LightCloudBackground()
 
                 VStack(spacing: 14) {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Your Profile")
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.textPrimary)
 
                         if let p = appState.profile {
                             InfoRow(label: "User ID", value: p.id.uuidString.prefix(8) + "…")
@@ -31,16 +31,16 @@ struct ProfileView: View {
                                 .foregroundStyle(Theme.textSecondary)
                         }
                     }
-                    .padding(16)
-                    .background(Theme.card())
+                    .padding(18)
+                    .background(Theme.lightCard())
                     .padding(.horizontal)
 
                     Spacer()
                 }
                 .padding(.top, 10)
             }
-            .navigationTitle("Profile")
-            .toolbarBackground(.hidden, for: .navigationBar)
+            .navigationTitle("")
+            .navigationBarHidden(true)
         }
     }
 }
@@ -53,7 +53,7 @@ private struct InfoRow: View {
         HStack {
             Text(label)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyle(Theme.textPrimary)
             Spacer()
             Text(value)
                 .font(.caption)

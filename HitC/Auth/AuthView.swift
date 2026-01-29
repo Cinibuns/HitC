@@ -13,71 +13,209 @@ struct AuthView: View {
 
     @State private var email = ""
     @State private var password = ""
+
+    @State private var rememberMe = true
+    @State private var showPassword = false
+
     @State private var isLoading = false
     @State private var errorText: String?
+
+    private var cloudsGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 1.00, green: 0.35, blue: 0.62),
+                Color(red: 0.49, green: 0.36, blue: 1.00),
+                Color(red: 0.23, green: 0.67, blue: 1.00)
+            ],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
 
     var body: some View {
         NavigationView {
             ZStack {
-                CloudBackground()
+                LightCloudBackground()
 
-                VStack(spacing: 16) {
-                    VStack(spacing: 6) {
-                        Text("Head in the Clouds")
-                            .font(.title2.weight(.bold))
-                            .foregroundStyle(.white)
+                ScrollView {
+                    VStack(spacing: 18) {
 
-                        Text("Sign in to continue")
-                            .font(.subheadline)
-                            .foregroundStyle(Theme.textSecondary)
-                    }
+                        // Top brand
+                        HStack(spacing: 10) {
+                            Image(systemName: "cloud.fill")
+                                .font(.title2)
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(red: 1.00, green: 0.35, blue: 0.62),
+                                            Color(red: 0.49, green: 0.36, blue: 1.00),
+                                            Color(red: 0.23, green: 0.67, blue: 1.00)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        TextField("Email", text: $email)
-                            .textInputAutocapitalization(.never)
-                            .keyboardType(.emailAddress)
-                            .autocorrectionDisabled()
-                            .textFieldStyle(.roundedBorder)
-
-                        SecureField("Password", text: $password)
-                            .textFieldStyle(.roundedBorder)
-
-                        if let errorText {
-                            Text(errorText)
-                                .foregroundStyle(.red)
-                                .font(.caption)
+                            Text("Head in the Clouds")
+                                .font(.headline.weight(.bold))
+                                .foregroundStyle(Theme.textPrimary)
                         }
+                        .padding(.top, 18)
 
-                        Button {
-                            Task { await signIn() }
-                        } label: {
-                            if isLoading { ProgressView().tint(.white) }
-                            else { Text("Sign in") }
-                        }
-                        .buttonStyle(GradientPrimaryButtonStyle())
-                        .disabled(isLoading)
+                        // Main card
+                        VStack(alignment: .leading, spacing: 16) {
 
-                        Button {
-                            Task { await signUp() }
-                        } label: {
-                            Text("Sign up")
+                            // Title (no Text "+" concat)
+                            VStack(alignment: .center, spacing: 8) {
+                                HStack(spacing: 0) {
+                                    Text("Welcome back to ")
+                                        .foregroundStyle(Theme.textPrimary)
+
+                                    Text("Clouds")
+                                        .foregroundStyle(cloudsGradient)
+                                }
+                                .font(.title2.weight(.bold))
+                                .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity)
+
+                                Text("Your communities are waiting ✨")
+                                    .font(.subheadline)
+                                    .foregroundStyle(Theme.textSecondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.bottom, 6)
+
+                            // Email
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Email")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+
+                                HStack(spacing: 10) {
+                                    Image(systemName: "envelope")
+                                        .foregroundStyle(Theme.textSecondary)
+
+                                    TextField("you@example.com", text: $email)
+                                        .textInputAutocapitalization(.never)
+                                        .keyboardType(.emailAddress)
+                                        .autocorrectionDisabled()
+                                }
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 14)
+                                .background(Color.white.opacity(0.85))
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .stroke(Color.white.opacity(0.70), lineWidth: 1)
+                                )
+                            }
+
+                            // Password + forgot
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("Password")
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(Theme.textPrimary)
+
+                                    Spacer()
+
+                                    Button("Forgot password?") {
+                                        // optional later: Supabase reset email
+                                    }
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Color(red: 0.84, green: 0.10, blue: 0.62))
+                                }
+
+                                HStack(spacing: 10) {
+                                    Image(systemName: "lock")
+                                        .foregroundStyle(Theme.textSecondary)
+
+                                    Group {
+                                        if showPassword {
+                                            TextField("••••••••", text: $password)
+                                        } else {
+                                            SecureField("••••••••", text: $password)
+                                        }
+                                    }
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled()
+
+                                    Spacer()
+
+                                    Button {
+                                        showPassword.toggle()
+                                    } label: {
+                                        Image(systemName: showPassword ? "eye.slash" : "eye")
+                                            .foregroundStyle(Theme.textSecondary)
+                                    }
+                                }
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 14)
+                                .background(Color.white.opacity(0.85))
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .stroke(Color.white.opacity(0.70), lineWidth: 1)
+                                )
+                            }
+
+                            // Remember me
+                            Toggle("Remember me", isOn: $rememberMe)
+                                .tint(Color(red: 0.84, green: 0.10, blue: 0.62))
+                                .foregroundStyle(Theme.textPrimary)
+                                .padding(.top, 2)
+
+                            if let errorText {
+                                Text(errorText)
+                                    .font(.caption)
+                                    .foregroundStyle(.red)
+                            }
+
+                            // Primary CTA (neon ring)
+                            Button {
+                                Task { await signIn() }
+                            } label: {
+                                HStack(spacing: 10) {
+                                    Text(isLoading ? "Signing in…" : "Log In")
+                                    Image(systemName: "arrow.right")
+                                }
+                            }
+                            .buttonStyle(NeonRingPrimaryButtonStyle())
+                            .disabled(isLoading)
+
+                            // “Don’t have…” line
+                            HStack(spacing: 6) {
+                                Text("Don’t have an account?")
+                                    .font(.footnote)
+                                    .foregroundStyle(Theme.textSecondary)
+
+                                Button("Sign up") {
+                                    Task { await signUp() }
+                                }
+                                .font(.footnote.weight(.bold))
+                                .foregroundStyle(Color(red: 0.84, green: 0.10, blue: 0.62))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 4)
+
+                            // Pride dots
+                            RainbowDotsView()
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 4)
                         }
-                        .buttonStyle(SoftButtonStyle())
-                        .disabled(isLoading)
+                        .padding(20)
+                        .background(Theme.lightCard())
+                        .padding(.horizontal)
+                        .padding(.top, 6)
 
-                        Text("No explicit content is shown by default.")
-                            .font(.caption2)
+                        Text("Built with comfort-first defaults and privacy in mind.")
+                            .font(.caption)
                             .foregroundStyle(Theme.textSecondary)
-                            .padding(.top, 2)
-                    }
-                    .padding(16)
-                    .background(Theme.card())
-                    .padding(.horizontal)
+                            .padding(.top, 4)
 
-                    Spacer()
+                        Spacer(minLength: 30)
+                    }
                 }
-                .padding(.top, 24)
             }
             .navigationTitle("")
             .navigationBarHidden(true)
@@ -94,7 +232,6 @@ struct AuthView: View {
             await appState.refreshSession()
         } catch {
             errorText = error.localizedDescription
-            print("SIGN IN ERROR:", error)
         }
     }
 
@@ -106,13 +243,11 @@ struct AuthView: View {
         do {
             _ = try await SupabaseManager.client.auth.signUp(email: email, password: password)
             await appState.refreshSession()
-
             if !appState.isSignedIn {
                 errorText = "Check your email to verify, then sign in."
             }
         } catch {
             errorText = error.localizedDescription
-            print("SIGN UP ERROR:", error)
         }
     }
 }

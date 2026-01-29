@@ -31,30 +31,24 @@ struct InlineCommentsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
 
-            // Add comment composer
+            // Add comment
             VStack(alignment: .leading, spacing: 10) {
                 TextField("Add a comment…", text: $newComment, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(1...4)
-                    .tint(.white)
-                    .foregroundStyle(.white)
-                    .scrollContentBackground(.hidden)
-                    .background(Color.white.opacity(0.10))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                 Button {
                     Task { await postTopLevel() }
                 } label: {
                     if isPosting { ProgressView().tint(.white) } else { Text("Post") }
                 }
-                .buttonStyle(GradientPrimaryButtonStyle())
+                .buttonStyle(NeonRingPrimaryButtonStyle())
                 .disabled(isPosting || newComment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
-            .padding(12)
-            .background(Theme.card())
-            .padding(.top, 2)
+            .padding(14)
+            .background(Theme.lightCard())
 
-            // Reply composer (shows when replying)
+            // Reply box
             if let parentId = replyingTo {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Replying…")
@@ -70,7 +64,7 @@ struct InlineCommentsView: View {
                             replyingTo = nil
                             replyText = ""
                         }
-                        .buttonStyle(SoftButtonStyle())
+                        .buttonStyle(SoftSecondaryButtonStyle())
 
                         Spacer()
 
@@ -79,23 +73,22 @@ struct InlineCommentsView: View {
                         } label: {
                             if isPostingReply { ProgressView().tint(.white) } else { Text("Reply") }
                         }
-                        .buttonStyle(GradientPrimaryButtonStyle())
-                        .frame(maxWidth: 160)
+                        .buttonStyle(NeonRingPrimaryButtonStyle())
+                        .frame(maxWidth: 170)
                         .disabled(isPostingReply || replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
                 }
-                .padding(12)
-                .background(Theme.card())
+                .padding(14)
+                .background(Theme.lightCard())
             }
 
-            // Comments list area
+            // List
             if isLoading {
                 ProgressView("Loading comments…")
-                    .tint(.white)
             } else if let errorText {
                 Text(errorText).foregroundStyle(.red).font(.caption)
                 Button("Retry") { Task { await load() } }
-                    .buttonStyle(SoftButtonStyle())
+                    .buttonStyle(SoftSecondaryButtonStyle())
             } else if topLevel.isEmpty {
                 Text("No comments yet.")
                     .font(.caption)
@@ -103,7 +96,7 @@ struct InlineCommentsView: View {
             } else {
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(topLevel.prefix(maxTopLevel)) { c in
-                        CommentBubbleNode(
+                        CommentBubbleNodeView(
                             comment: c,
                             childrenByParent: childrenByParent,
                             depth: 0,
@@ -118,15 +111,19 @@ struct InlineCommentsView: View {
                         NavigationLink {
                             CommentsView(postId: postId)
                         } label: {
-                            HStack(spacing: 8) {
-                                Text("See all comments")
-                                Image(systemName: "chevron.right")
-                            }
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity)
-                            .background(Theme.pill())
+                            Text("See all comments")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Theme.textPrimary)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .fill(Color.white.opacity(0.70))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .stroke(Color.white.opacity(0.70), lineWidth: 1)
+                                        )
+                                )
                         }
                         .buttonStyle(.plain)
                     }
@@ -200,51 +197,6 @@ struct InlineCommentsView: View {
             await load()
         } catch {
             errorText = error.localizedDescription
-        }
-    }
-}
-
-// MARK: - Recursive bubble nodes
-
-private struct CommentBubbleNode: View {
-    let comment: Comment
-    let childrenByParent: [UUID: [Comment]]
-    let depth: Int
-    let onReplyTapped: (UUID) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(comment.body ?? "")
-                    .foregroundStyle(.white)
-
-                HStack(spacing: 10) {
-                    Button("Reply") { onReplyTapped(comment.id) }
-                        .buttonStyle(SoftButtonStyle())
-
-                    Spacer()
-
-                    Text(comment.authorId.uuidString.prefix(8) + "…")
-                        .font(.caption2)
-                        .foregroundStyle(Theme.textSecondary)
-                }
-            }
-            .padding(12)
-            .background(BubbleBackground(isReply: depth > 0))
-
-            if let kids = childrenByParent[comment.id], !kids.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(kids) { child in
-                        CommentBubbleNode(
-                            comment: child,
-                            childrenByParent: childrenByParent,
-                            depth: depth + 1,
-                            onReplyTapped: onReplyTapped
-                        )
-                        .padding(.leading, 14) // indentation
-                    }
-                }
-            }
         }
     }
 }
