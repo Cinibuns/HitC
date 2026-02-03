@@ -12,17 +12,15 @@ struct InlineCommentsView: View {
     let refreshKey: Int
     let onPosted: () -> Void
 
-    private let maxTopLevel = 5
-
     @State private var topLevel: [Comment] = []
     @State private var childrenByParent: [UUID: [Comment]] = [:]
-    @State private var hasMoreTopLevel = false
+    @State private var profilesById: [UUID: PublicProfile] = [:]
 
     @State private var isLoading = false
     @State private var errorText: String?
 
-    @State private var newComment = ""
-    @State private var isPosting = false
+    @State private var newCommentText = ""
+    @State private var isPostingTopLevel = false
 
     @State private var replyingTo: UUID? = nil
     @State private var replyText = ""
@@ -30,111 +28,187 @@ struct InlineCommentsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            header
 
-            // Add comment
-            VStack(alignment: .leading, spacing: 10) {
-                TextField("Add a comment…", text: $newComment, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
+            content
+
+            Divider().opacity(0.15)
+
+            if let parentId = replyingTo {
+                replyComposer(parentId: parentId)
+            } else {
+                topLevelComposer
+            }
+        }
+        .padding(14)
+        .background(Color.white.opacity(0.55))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.white.opacity(0.70), lineWidth: 1)
+        )
+        .task { await load() }
+        .onChange(of: refreshKey) { _, _ in
+            Task { await load() }
+        }
+    }
+
+    // MARK: - Header / Content
+
+    private var header: some View {
+        HStack {
+            Text("Thread")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.textPrimary)
+
+            Spacer()
+
+            Button {
+                Task { await load() }
+            } label: {
+                Image(systemName: "arrow.clockwise")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if isLoading {
+            ProgressView("Loading comments…")
+                .foregroundStyle(Theme.textSecondary)
+
+        } else if let errorText {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Couldn’t load comments.")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.textPrimary)
+
+                Text(errorText)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+
+                Button("Retry") { Task { await load() } }
+                    .buttonStyle(NeonRingPrimaryButtonStyle())
+            }
+
+        } else if topLevel.isEmpty {
+            Text("No comments yet. Be the first 🙂")
+                .font(.caption)
+                .foregroundStyle(Theme.textSecondary)
+
+        } else {
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(topLevel) { c in
+                    CommentThreadView(
+                        postId: postId,
+                        comment: c,
+                        childrenByParent: childrenByParent,
+                        depth: 0,
+                        profilesById: profilesById,
+                        onReplyTapped: { id in
+                            replyingTo = id
+                            replyText = ""
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    // MARK: - Composers
+
+    private var topLevelComposer: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Add a comment")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Theme.textSecondary)
+
+            HStack(spacing: 10) {
+                TextField("Write something…", text: $newCommentText, axis: .vertical)
                     .lineLimit(1...4)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color.white.opacity(0.75))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.white.opacity(0.70), lineWidth: 1)
+                    )
+                    .foregroundStyle(Theme.textPrimary)
 
                 Button {
                     Task { await postTopLevel() }
                 } label: {
-                    if isPosting { ProgressView().tint(.white) } else { Text("Post") }
-                }
-                .buttonStyle(NeonRingPrimaryButtonStyle())
-                .disabled(isPosting || newComment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-            .padding(14)
-            .background(Theme.lightCard())
-
-            // Reply box
-            if let parentId = replyingTo {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Replying…")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Theme.textSecondary)
-
-                    TextField("Write a reply…", text: $replyText, axis: .vertical)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(1...4)
-
-                    HStack(spacing: 10) {
-                        Button("Cancel") {
-                            replyingTo = nil
-                            replyText = ""
-                        }
-                        .buttonStyle(SoftSecondaryButtonStyle())
-
-                        Spacer()
-
-                        Button {
-                            Task { await postReply(parentId: parentId) }
-                        } label: {
-                            if isPostingReply { ProgressView().tint(.white) } else { Text("Reply") }
-                        }
-                        .buttonStyle(NeonRingPrimaryButtonStyle())
-                        .frame(maxWidth: 170)
-                        .disabled(isPostingReply || replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    if isPostingTopLevel {
+                        ProgressView().tint(Theme.textPrimary).padding(10)
+                    } else {
+                        Image(systemName: "paperplane.fill")
+                            .foregroundStyle(Theme.textPrimary)
+                            .padding(10)
                     }
                 }
-                .padding(14)
-                .background(Theme.lightCard())
-            }
-
-            // List
-            if isLoading {
-                ProgressView("Loading comments…")
-            } else if let errorText {
-                Text(errorText).foregroundStyle(.red).font(.caption)
-                Button("Retry") { Task { await load() } }
-                    .buttonStyle(SoftSecondaryButtonStyle())
-            } else if topLevel.isEmpty {
-                Text("No comments yet.")
-                    .font(.caption)
-                    .foregroundStyle(Theme.textSecondary)
-            } else {
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(topLevel.prefix(maxTopLevel)) { c in
-                        CommentBubbleNodeView(
-                            comment: c,
-                            childrenByParent: childrenByParent,
-                            depth: 0,
-                            onReplyTapped: { id in
-                                replyingTo = id
-                                replyText = ""
-                            }
-                        )
-                    }
-
-                    if hasMoreTopLevel {
-                        NavigationLink {
-                            CommentsView(postId: postId)
-                        } label: {
-                            Text("See all comments")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(Theme.textPrimary)
-                                .padding(.vertical, 10)
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(Color.white.opacity(0.70))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .stroke(Color.white.opacity(0.70), lineWidth: 1)
-                                        )
-                                )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+                .background(Color.white.opacity(0.75))
+                .clipShape(Circle())
+                .buttonStyle(.plain)
+                .disabled(isPostingTopLevel || newCommentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
-        .onChange(of: refreshKey) { _, _ in
-            Task { await load() }
-        }
-        .task { await load() }
     }
+
+    private func replyComposer(parentId: UUID) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Replying…")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.textSecondary)
+
+                Spacer()
+
+                Button("Cancel") {
+                    replyingTo = nil
+                    replyText = ""
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Theme.textSecondary)
+            }
+
+            HStack(spacing: 10) {
+                TextField("Write a reply…", text: $replyText, axis: .vertical)
+                    .lineLimit(1...4)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color.white.opacity(0.75))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.white.opacity(0.70), lineWidth: 1)
+                    )
+                    .foregroundStyle(Theme.textPrimary)
+
+                Button {
+                    Task { await postReply(parentId: parentId) }
+                } label: {
+                    if isPostingReply {
+                        ProgressView().tint(Theme.textPrimary).padding(10)
+                    } else {
+                        Image(systemName: "arrowshape.turn.up.left.fill")
+                            .foregroundStyle(Theme.textPrimary)
+                            .padding(10)
+                    }
+                }
+                .background(Color.white.opacity(0.75))
+                .clipShape(Circle())
+                .buttonStyle(.plain)
+                .disabled(isPostingReply || replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+    }
+
+    // MARK: - Data
 
     private func load() async {
         isLoading = true
@@ -142,7 +216,7 @@ struct InlineCommentsView: View {
         errorText = nil
 
         do {
-            let rows = try await CommentService.fetchAllComments(postId: postId, limit: 600)
+            let rows = try await CommentService.fetchAllComments(postId: postId, limit: 2000)
 
             var byParent: [UUID: [Comment]] = [:]
             var tops: [Comment] = []
@@ -155,35 +229,49 @@ struct InlineCommentsView: View {
                 }
             }
 
-            hasMoreTopLevel = tops.count > maxTopLevel
+            // sort (keeps UI stable)
+            for (k, v) in byParent {
+                byParent[k] = v.sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
+            }
+            tops = tops.sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
+
             childrenByParent = byParent
             topLevel = tops
+
+            let ids = Array(Set(rows.map(\.authorId)))
+            let missing = ids.filter { profilesById[$0] == nil }
+            if !missing.isEmpty {
+                let profiles = try await PublicProfileService.fetchProfiles(ids: missing)
+                for p in profiles { profilesById[p.id] = p }
+            }
         } catch {
             errorText = error.localizedDescription
         }
     }
 
     private func postTopLevel() async {
-        let text = newComment.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
+        let text = newCommentText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, !isPostingTopLevel else { return }
 
-        isPosting = true
-        defer { isPosting = false }
+        isPostingTopLevel = true
+        defer { isPostingTopLevel = false }
         errorText = nil
 
         do {
             try await CommentService.addTopLevelComment(postId: postId, body: text)
-            newComment = ""
+            newCommentText = ""
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onPosted()
             await load()
         } catch {
             errorText = error.localizedDescription
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
     }
 
     private func postReply(parentId: UUID) async {
         let text = replyText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
+        guard !text.isEmpty, !isPostingReply else { return }
 
         isPostingReply = true
         defer { isPostingReply = false }
@@ -193,10 +281,12 @@ struct InlineCommentsView: View {
             try await CommentService.addReply(postId: postId, parentCommentId: parentId, body: text)
             replyingTo = nil
             replyText = ""
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onPosted()
             await load()
         } catch {
             errorText = error.localizedDescription
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
     }
 }

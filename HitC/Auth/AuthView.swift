@@ -32,15 +32,28 @@ struct AuthView: View {
         )
     }
 
+    private var cleanedEmail: String {
+        email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    private var cleanedPassword: String {
+        password.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var canSubmit: Bool {
+        !cleanedEmail.isEmpty && !cleanedPassword.isEmpty && !isLoading
+    }
+
     var body: some View {
         NavigationView {
             ZStack {
+                // ✅ IMPORTANT: background must NOT block touches
                 LightCloudBackground()
+                    .allowsHitTesting(false)
 
                 ScrollView {
                     VStack(spacing: 18) {
 
-                        // Top brand
                         HStack(spacing: 10) {
                             Image(systemName: "cloud.fill")
                                 .font(.title2)
@@ -62,10 +75,8 @@ struct AuthView: View {
                         }
                         .padding(.top, 18)
 
-                        // Main card
                         VStack(alignment: .leading, spacing: 16) {
 
-                            // Title (no Text "+" concat)
                             VStack(alignment: .center, spacing: 8) {
                                 HStack(spacing: 0) {
                                     Text("Welcome back to ")
@@ -85,7 +96,6 @@ struct AuthView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.bottom, 6)
 
-                            // Email
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Email")
                                     .font(.subheadline.weight(.semibold))
@@ -110,7 +120,6 @@ struct AuthView: View {
                                 )
                             }
 
-                            // Password + forgot
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
                                     Text("Password")
@@ -120,7 +129,7 @@ struct AuthView: View {
                                     Spacer()
 
                                     Button("Forgot password?") {
-                                        // optional later: Supabase reset email
+                                        // optional later
                                     }
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(Color(red: 0.84, green: 0.10, blue: 0.62))
@@ -159,7 +168,6 @@ struct AuthView: View {
                                 )
                             }
 
-                            // Remember me
                             Toggle("Remember me", isOn: $rememberMe)
                                 .tint(Color(red: 0.84, green: 0.10, blue: 0.62))
                                 .foregroundStyle(Theme.textPrimary)
@@ -171,7 +179,6 @@ struct AuthView: View {
                                     .foregroundStyle(.red)
                             }
 
-                            // Primary CTA (neon ring)
                             Button {
                                 Task { await signIn() }
                             } label: {
@@ -181,9 +188,8 @@ struct AuthView: View {
                                 }
                             }
                             .buttonStyle(NeonRingPrimaryButtonStyle())
-                            .disabled(isLoading)
+                            .disabled(!canSubmit)
 
-                            // “Don’t have…” line
                             HStack(spacing: 6) {
                                 Text("Don’t have an account?")
                                     .font(.footnote)
@@ -198,10 +204,10 @@ struct AuthView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.top, 4)
 
-                            // Pride dots
                             RainbowDotsView()
                                 .frame(maxWidth: .infinity)
                                 .padding(.top, 4)
+                                .allowsHitTesting(false) // decorative
                         }
                         .padding(20)
                         .background(Theme.lightCard())
@@ -224,11 +230,14 @@ struct AuthView: View {
 
     private func signIn() async {
         isLoading = true
-        defer { isLoading = false }
         errorText = nil
+        defer { isLoading = false }
 
         do {
-            _ = try await SupabaseManager.client.auth.signIn(email: email, password: password)
+            _ = try await SupabaseManager.client.auth.signIn(
+                email: cleanedEmail,
+                password: cleanedPassword
+            )
             await appState.refreshSession()
         } catch {
             errorText = error.localizedDescription
@@ -237,11 +246,14 @@ struct AuthView: View {
 
     private func signUp() async {
         isLoading = true
-        defer { isLoading = false }
         errorText = nil
+        defer { isLoading = false }
 
         do {
-            _ = try await SupabaseManager.client.auth.signUp(email: email, password: password)
+            _ = try await SupabaseManager.client.auth.signUp(
+                email: cleanedEmail,
+                password: cleanedPassword
+            )
             await appState.refreshSession()
             if !appState.isSignedIn {
                 errorText = "Check your email to verify, then sign in."

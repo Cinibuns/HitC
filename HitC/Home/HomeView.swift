@@ -7,14 +7,6 @@
 
 import SwiftUI
 
-struct IdentifiableURL: Identifiable {
-    let id: String
-    let url: URL
-    init(_ url: URL) {
-        self.url = url
-        self.id = url.absoluteString
-    }
-}
 
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
@@ -97,6 +89,7 @@ struct HomeView: View {
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
                                 .padding(.vertical, 6)
+                                
                             }
                         }
                         .listStyle(.plain)
